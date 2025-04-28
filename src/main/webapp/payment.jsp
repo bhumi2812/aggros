@@ -5,12 +5,23 @@
     List<CartItem> cartItems = (List<CartItem>) session.getAttribute("cart");
     ProductDAO productDAO = new ProductDAO();
     double total = 0.0;
+    String paymentMethod = request.getParameter("method");
+    
+    // Calculate total
+    if (cartItems != null && !cartItems.isEmpty()) {
+        for (CartItem item : cartItems) {
+            Product product = productDAO.getProductById(item.getProduct().getId());
+            if (product != null) {
+                total += product.getPrice() * item.getQuantity();
+            }
+        }
+    }
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Agro's - Checkout</title>
+    <title>Payment - Agro's</title>
     <style>
         * {
             margin: 0;
@@ -55,14 +66,14 @@
             background-color: #45a049;
         }
         
-        .booking-container {
+        .payment-container {
             display: flex;
             gap: 30px;
             margin-top: 20px;
         }
         
-        .booking-form {
-            flex: 2;
+        .payment-details {
+            flex: 1;
             background: white;
             padding: 30px;
             border-radius: 10px;
@@ -77,82 +88,45 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+        .section-title {
             color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4CAF50;
         }
         
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        textarea {
-            width: 100%;
-            padding: 10px;
+        .payment-method {
+            margin-bottom: 20px;
+            padding: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-size: 16px;
         }
         
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        
-        .payment-methods {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        
-        .payment-option {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .payment-option:hover {
-            border-color: #4CAF50;
-            background-color: #f9f9f9;
-        }
-        
-        .payment-option input[type="radio"] {
-            margin-right: 10px;
-        }
-        
-        .payment-icon {
+        .payment-method img {
             width: 40px;
             height: 40px;
             margin-right: 15px;
-            object-fit: contain;
+            vertical-align: middle;
         }
         
-        .payment-details {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f9f9f9;
+        .qr-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 10px;
             border-radius: 5px;
-            display: none;
-        }
-        
-        .payment-details.active {
-            display: block;
         }
         
         .btn {
             background-color: #4CAF50;
             color: white;
-            padding: 12px 20px;
+            padding: 12px 24px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -208,14 +182,6 @@
             font-weight: bold;
         }
         
-        .error-message {
-            color: #f44336;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #ffebee;
-            border-radius: 5px;
-        }
-        
         /* Success Modal Styles */
         .modal {
             display: none;
@@ -267,11 +233,6 @@
             background-color: #4CAF50;
             color: white;
         }
-        
-        .modal-btn-secondary {
-            background-color: #2196F3;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -286,61 +247,36 @@
     </div>
     
     <div class="container">
-        <div class="booking-container">
-            <form action="order-details.jsp" method="post" class="booking-form" id="orderForm">
-                <h2>Shipping Details</h2>
-                <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" name="name" value="<%= user.getName() %>" required readonly>
-                </div>
+        <div class="payment-container">
+            <div class="payment-details">
+                <h2 class="section-title">Payment Details</h2>
                 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="<%= user.getEmail() %>" required readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" value="<%= user.getPhone() %>" required readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label for="address">Delivery Address</label>
-                    <textarea id="address" name="address" required readonly><%= user.getAddress() %></textarea>
-                </div>
-                
-                <div class="payment-methods">
-                    <h2>Payment Method</h2>
-                    
-                    <div class="payment-option">
-                        <input type="radio" id="cod" name="paymentMethod" value="cod" required checked>
-                        <img src="images/cod.png" alt="Cash on Delivery" class="payment-icon">
-                        <span>Cash on Delivery</span>
-                    </div>
-                    
-                    <div class="payment-option">
-                        <input type="radio" id="card" name="paymentMethod" value="card">
-                        <img src="images/credit-card.png" alt="Credit Card" class="payment-icon">
-                        <span>Credit/Debit Card</span>
-                    </div>
-                    
-                    <div class="payment-option">
-                        <input type="radio" id="upi" name="paymentMethod" value="upi">
-                        <img src="images/upi.png" alt="UPI" class="payment-icon">
+                <div class="payment-method">
+                    <% if ("card".equals(paymentMethod)) { %>
+                        <img src="images/credit-card.png" alt="Credit Card">
+                        <span>Credit/Debit Card Payment</span>
+                    <% } else if ("upi".equals(paymentMethod)) { %>
+                        <img src="images/upi.png" alt="UPI">
                         <span>UPI Payment</span>
-                    </div>
+                    <% } %>
                 </div>
                 
-                <button type="button" class="btn" onclick="submitOrder()">Place Order</button>
-            </form>
+                <div class="qr-container">
+                    <h3>Scan QR Code to Pay</h3>
+                    <img src="images/qr-code.png" alt="Payment QR Code" class="qr-code">
+                    <p>Amount to Pay: ₹<%= total %></p>
+                </div>
+                
+                <button type="button" class="btn" onclick="showSuccessModal()">Proceed to Pay</button>
+            </div>
             
             <div class="order-summary">
-                <h2>Order Summary</h2>
+                <h2 class="section-title">Order Summary</h2>
+                
                 <% if (cartItems != null && !cartItems.isEmpty()) { %>
                     <% for (CartItem item : cartItems) { 
                         Product product = productDAO.getProductById(item.getProduct().getId());
                         if (product != null) {
-                            total += product.getPrice() * item.getQuantity();
                     %>
                         <div class="order-item">
                             <img src="<%= product.getImageUrl() %>" alt="<%= product.getName() %>">
@@ -351,12 +287,13 @@
                             </div>
                         </div>
                     <% }} %>
+                    
                     <div class="order-total">
                         <div>Total Amount:</div>
                         <div class="total-amount">₹<%= total %></div>
                     </div>
                 <% } else { %>
-                    <p>Your cart is empty</p>
+                    <p>No items in this order</p>
                 <% } %>
             </div>
         </div>
@@ -366,31 +303,23 @@
     <div id="successModal" class="modal">
         <div class="modal-content">
             <div class="modal-icon">✓</div>
-            <h2>Order Placed Successfully!</h2>
-            <p>Thank you for your order. Your order has been received and is being processed.</p>
+            <h2>Payment Successful!</h2>
+            <p>Thank you for your payment. Your order has been confirmed.</p>
             <div class="modal-buttons">
-                <a href="products.jsp" class="modal-btn modal-btn-primary">Continue Shopping</a>
-                <a href="orders.jsp" class="modal-btn modal-btn-secondary">View Orders</a>
+                <a href="order-details.jsp" class="modal-btn modal-btn-primary">View Order Details</a>
             </div>
         </div>
     </div>
     
     <script>
-        function submitOrder() {
-            var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+        function showSuccessModal() {
+            // Show success modal
+            document.getElementById('successModal').style.display = 'block';
             
-            if (paymentMethod === 'cod') {
-                // Show success modal for COD
-                document.getElementById('successModal').style.display = 'block';
-                
-                // Submit form after a short delay
-                setTimeout(function() {
-                    document.getElementById('orderForm').submit();
-                }, 2000);
-            } else {
-                // Redirect to payment page for card/UPI
-                window.location.href = 'payment.jsp?method=' + paymentMethod;
-            }
+            // Redirect to order details page after 2 seconds
+            setTimeout(function() {
+                window.location.href = 'order-details.jsp';
+            }, 2000);
         }
         
         // Close modal when clicking outside
