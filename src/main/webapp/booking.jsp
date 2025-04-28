@@ -1,13 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.fertilizer.model.CartItem, com.fertilizer.model.Product, com.fertilizer.dao.ProductDAO, java.util.List" %>
+<%@ page import="com.fertilizer.model.CartItem, com.fertilizer.model.Product, com.fertilizer.dao.ProductDAO, com.fertilizer.model.User, java.util.List" %>
 <%
+    User user = (User) session.getAttribute("user");
     List<CartItem> cartItems = (List<CartItem>) session.getAttribute("cart");
     ProductDAO productDAO = new ProductDAO();
     double total = 0.0;
 %>
 <!DOCTYPE html>
 <html>
-<!-- <head> -->
+<head>
     <meta charset="UTF-8">
     <title>Agro's - Checkout</title>
     <style>
@@ -206,6 +207,71 @@
             color: #4CAF50;
             font-weight: bold;
         }
+        
+        .error-message {
+            color: #f44336;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 5px;
+        }
+        
+        /* Success Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .modal-icon {
+            font-size: 48px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        .modal-btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .modal-btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -221,33 +287,33 @@
     
     <div class="container">
         <div class="booking-container">
-            <form action="order.jsp" method="post" class="booking-form">
+            <form action="order-details.jsp" method="post" class="booking-form" id="orderForm">
                 <h2>Shipping Details</h2>
                 <div class="form-group">
                     <label for="name">Full Name</label>
-                    <input type="text" id="name" name="name" required>
+                    <input type="text" id="name" name="name" value="<%= user.getName() %>" required readonly>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
+                    <input type="email" id="email" name="email" value="<%= user.getEmail() %>" required readonly>
                 </div>
                 
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" required>
+                    <input type="tel" id="phone" name="phone" value="<%= user.getPhone() %>" required readonly>
                 </div>
                 
                 <div class="form-group">
                     <label for="address">Delivery Address</label>
-                    <textarea id="address" name="address" required></textarea>
+                    <textarea id="address" name="address" required readonly><%= user.getAddress() %></textarea>
                 </div>
                 
                 <div class="payment-methods">
                     <h2>Payment Method</h2>
                     
                     <div class="payment-option">
-                        <input type="radio" id="cod" name="paymentMethod" value="cod" required>
+                        <input type="radio" id="cod" name="paymentMethod" value="cod" required checked>
                         <img src="images/cod.png" alt="Cash on Delivery" class="payment-icon">
                         <span>Cash on Delivery</span>
                     </div>
@@ -265,7 +331,7 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="btn">Place Order</button>
+                <button type="button" class="btn" onclick="submitOrder()">Place Order</button>
             </form>
             
             <div class="order-summary">
@@ -296,21 +362,37 @@
         </div>
     </div>
     
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">✓</div>
+            <h2>Order Placed Successfully!</h2>
+            <p>Thank you for your order. Your order has been received and is being processed.</p>
+            <div class="modal-buttons">
+                <a href="products.jsp" class="modal-btn modal-btn-primary">Continue Shopping</a>
+                <a href="orders.jsp" class="modal-btn modal-btn-secondary">View Orders</a>
+            </div>
+        </div>
+    </div>
+    
     <script>
-        // Show payment details based on selected payment method
-        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.querySelectorAll('.payment-details').forEach(details => {
-                    details.classList.remove('active');
-                });
-                
-                if (this.value === 'card') {
-                    document.getElementById('card-details').classList.add('active');
-                } else if (this.value === 'upi') {
-                    document.getElementById('upi-details').classList.add('active');
-                }
-            });
-        });
+        function submitOrder() {
+            // Show success modal
+            document.getElementById('successModal').style.display = 'block';
+            
+            // Submit form after a short delay
+            setTimeout(function() {
+                document.getElementById('orderForm').submit();
+            }, 2000);
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            var modal = document.getElementById('successModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html> 
