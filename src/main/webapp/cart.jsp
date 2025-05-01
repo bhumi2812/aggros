@@ -1,27 +1,54 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.fertilizer.model.CartItem" %>
-<%@ page import="com.fertilizer.model.Product" %>
 <%@ page import="java.util.List" %>
+<%@ page import="com.pesticides.model.Cart" %>
+<%@ page import="com.pesticides.model.Cart.CartItem" %>
+<%@ page import="com.pesticides.model.Product" %>
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Cart - Fertilizer Shop</title>
+    <title>Cart - Agro's</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
         .cart-item {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            transition: all 0.3s ease;
         }
-        .product-image {
+        .cart-item:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .cart-item-image {
             width: 100px;
             height: 100px;
             object-fit: cover;
+            border-radius: 0.25rem;
         }
         .quantity-input {
-            width: 70px;
+            width: 60px;
+            text-align: center;
+        }
+        .quantity-input:focus {
+            box-shadow: none;
+            border-color: #0d6efd;
+        }
+        .total-section {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .btn-update {
+            padding: 0.25rem 0.5rem;
+        }
+        .btn-remove {
+            padding: 0.25rem 0.5rem;
+        }
+        .empty-cart-message {
+            padding: 2rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -29,82 +56,111 @@
     <jsp:include page="header.jsp" />
     
     <div class="container mt-4">
-        <h2 class="mb-4">Your Cart</h2>
+        <h1 class="mb-4">Shopping Cart</h1>
         
         <%
-            List<CartItem> cart = (List<CartItem>) request.getAttribute("cart");
-            double total = 0.0;
-            
-            if (cart == null || cart.isEmpty()) {
-        %>
-            <div class="alert alert-info">
-                Your cart is empty. <a href="products">Continue shopping</a>
-            </div>
-        <%
-            } else {
+        // Get cart from session or create new one
+        Cart cart = (Cart) session.getAttribute("cart");
+        if (cart == null) {
+            cart = new Cart();
+            session.setAttribute("cart", cart);
+        }
+        
+        // Get cart items
+        List<Cart.CartItem> items = cart.getItems();
+        
+        // Check if cart has items
+        if (items != null && !items.isEmpty()) {
         %>
             <div class="row">
                 <div class="col-md-8">
-                    <%
-                        for (CartItem item : cart) {
+                    <% 
+                    // Display each cart item
+                    for (Cart.CartItem item : items) {
+                        if (item != null) {
                             Product product = item.getProduct();
-                            double itemTotal = product.getPrice() * item.getQuantity();
-                            total += itemTotal;
+                            if (product != null) {
                     %>
-                        <div class="card mb-3">
-                            <div class="row g-0">
-                                <div class="col-md-4">
-                                    <img src="<%= product.getImageUrl() %>" class="img-fluid rounded-start" alt="<%= product.getName() %>">
+                        <div class="cart-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <img src="<%= product.getImageUrl() != null ? product.getImageUrl() : "images/default-product.jpg" %>"
+                                         class="cart-item-image" 
+                                         alt="<%= product.getName() %>">
                                 </div>
-                                <div class="col-md-8">
-                                    <div class="card-body">
-                                        <h5 class="card-title"><%= product.getName() %></h5>
-                                        <p class="card-text"><%= product.getDescription() %></p>
-                                        <p class="card-text">
-                                            <small class="text-muted">Price: $<%= product.getPrice() %></small>
-                                        </p>
-                                        <form action="cart" method="post" class="d-inline">
-                                            <input type="hidden" name="action" value="update">
-                                            <input type="hidden" name="productId" value="<%= product.getId() %>">
-                                            <div class="input-group mb-3" style="width: 200px;">
-                                                <input type="number" name="quantity" value="<%= item.getQuantity() %>" 
-                                                       min="1" max="<%= product.getStock() %>" class="form-control">
-                                                <button type="submit" class="btn btn-outline-primary">Update</button>
-                                            </div>
-                                        </form>
-                                        <form action="cart" method="post" class="d-inline">
-                                            <input type="hidden" name="action" value="remove">
-                                            <input type="hidden" name="productId" value="<%= product.getId() %>">
-                                            <button type="submit" class="btn btn-outline-danger">Remove</button>
-                                        </form>
-                                    </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-1"><%= product.getName() %></h5>
+                                    <p class="text-muted small mb-0"><%= product.getDescription() %></p>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="h5 text-primary">$<%= String.format("%.2f", product.getPrice()) %></span>
+                                </div>
+                                <div class="col-md-2">
+                                    <form action="cart" method="post" class="d-flex align-items-center">
+                                        <input type="hidden" name="action" value="update">
+                                        <input type="hidden" name="productId" value="<%= product.getId() %>">
+                                        <input type="number" name="quantity" value="<%= item.getQuantity() %>" 
+                                               min="1" max="<%= product.getStock() %>"
+                                               class="form-control quantity-input">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary btn-update ms-2">
+                                            <i class="fas fa-sync"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-md-2">
+                                    <form action="cart" method="post">
+                                        <input type="hidden" name="action" value="remove">
+                                        <input type="hidden" name="productId" value="<%= product.getId() %>">
+                                        <button type="submit" class="btn btn-danger btn-remove">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
-                    <%
+                    <% 
+                            }
                         }
+                    } 
                     %>
                 </div>
                 <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Order Summary</h5>
-                            <p class="card-text">Total Items: <%= cart.size() %></p>
-                            <p class="card-text">Total Amount: $<%= String.format("%.2f", total) %></p>
-                            <form action="cart" method="post">
-                                <input type="hidden" name="action" value="clear">
-                                <button type="submit" class="btn btn-outline-danger mb-2">Clear Cart</button>
-                            </form>
-                            <a href="checkout.jsp" class="btn btn-primary">Proceed to Checkout</a>
+                    <div class="total-section">
+                        <h4 class="mb-3">Order Summary</h4>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span class="text-primary">$<%= String.format("%.2f", cart.getTotalAmount()) %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span class="text-success">Free</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="h5">Total:</span>
+                            <span class="h5 text-primary">$<%= String.format("%.2f", cart.getTotalAmount()) %></span>
+                        </div>
+                        <div class="d-grid">
+                            <a href="checkout.jsp" class="btn btn-primary btn-lg">
+                                <i class="fas fa-shopping-bag me-2"></i>Proceed to Checkout
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-        <%
-            }
-        %>
+        <% } else { %>
+            <div class="empty-cart-message">
+                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">Your cart is empty</h4>
+                <p class="text-muted">Looks like you haven't added any items to your cart yet.</p>
+                <a href="products.jsp" class="btn btn-primary">
+                    <i class="fas fa-store me-2"></i>Continue Shopping
+                </a>
+            </div>
+        <% } %>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html> 
+</html>

@@ -2,167 +2,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Register - Fertilizer E-Commerce</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            color: #666;
-            font-size: 16px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #4CAF50;
-        }
-        
-        .error-message {
-            color: #f44336;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .btn:hover {
-            background-color: #45a049;
-        }
-        
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-        }
-        
-        .login-link a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-        
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        
-        .alert-danger {
-            background-color: #f44336;
-            color: white;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <title>Register - Agros Pesticides</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Create Account</h1>
-            <p>Join our fertilizer e-commerce platform</p>
-        </div>
-        
-        <% 
-        String error = (String)request.getAttribute("error");
-        if (error != null) { 
-        %>
-            <div class="alert alert-danger"><%= error %></div>
-        <% } %>
-        
-        <form action="register" method="post">
-            <div class="form-group">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" required>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Register</h3>
+                    </div>
+                    <div class="card-body">
+                        <% if(request.getAttribute("error") != null) { %>
+                            <div class="alert alert-danger">
+                                <%= request.getAttribute("error") %>
+                            </div>
+                        <% } %>
+                        
+                        <form action="register" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Register</button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            Already have an account? <a href="login.jsp">Login here</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required>
-            </div>
-            
-            <button type="submit" class="btn">Register</button>
-        </form>
-        
-        <div class="login-link">
-            Already have an account? <a href="login.jsp">Login here</a>
         </div>
     </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 
